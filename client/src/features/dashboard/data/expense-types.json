@@ -1,0 +1,16 @@
+[
+  { "val": "all", "icon": "fa-solid fa-layer-group" },
+  { "val": "EB", "icon": "fa-solid fa-bolt" },
+  { "val": "home", "icon": "fa-solid fa-house" },
+  { "val": "grocery", "icon": "fa-solid fa-cart-shopping" },
+  { "val": "health", "icon": "fa-solid fa-heart-pulse" },
+  { "val": "internet", "icon": "fa-solid fa-globe" },
+  { "val": "transport", "icon": "fa-solid fa-bus" },
+  { "val": "children", "icon": "fa-solid fa-child" },
+  { "val": "gas", "icon": "fa-solid fa-gas-pump" },
+  { "val": "food", "icon": "fa-solid fa-utensils" },
+  { "val": "entertain", "icon": "fa-solid fa-ticket" },
+  { "val": "clothing", "icon": "fa-solid fa-shirt" },
+  { "val": "decor", "icon": "fa-solid fa-couch" },
+  { "val": "others", "icon": "fa-solid fa-ellipsis" }
+]

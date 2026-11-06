@@ -1,0 +1,2 @@
+node .ai-sdlc/guardrails/pre-commit-validator.mjs
+npx --no-install lint-staged

@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeReadFile": [{ "command": "node .ai-sdlc/hooks/guard.mjs", "failClosed": true }],
+    "beforeTabFileRead": [{ "command": "node .ai-sdlc/hooks/guard.mjs", "failClosed": true }],
+    "beforeShellExecution": [{ "command": "node .ai-sdlc/hooks/guard.mjs", "failClosed": true }],
+    "preToolUse": [{ "command": "node .ai-sdlc/hooks/guard.mjs", "matcher": "Write|Delete|Edit", "failClosed": true }],
+    "afterFileEdit": [{ "command": "node .ai-sdlc/hooks/post-write.mjs" }]
+  }
+}

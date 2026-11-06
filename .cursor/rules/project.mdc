@@ -1,0 +1,10 @@
+---
+description: Core conventions for the expense-tracker repository
+alwaysApply: true
+---
+
+Follow `AGENTS.md` for architecture, conventions and validation commands.
+
+- Stories and tickets go through the pipeline in `.ai-sdlc/pipeline.md` (skill: `story-to-code`).
+- Subagents live in `.claude/agents/`; skills in `.github/skills/` (symlinked at `.claude/skills/`). Cursor loads both.
+- Guardrails are enforced by `.cursor/hooks.json`; do not try to bypass a denied operation, report it.

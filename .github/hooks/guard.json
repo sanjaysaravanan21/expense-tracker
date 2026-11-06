@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "type": "command",
+        "bash": "node .ai-sdlc/hooks/guard.mjs",
+        "powershell": "node .ai-sdlc/hooks/guard.mjs",
+        "timeoutSec": 10
+      }
+    ],
+    "postToolUse": [
+      {
+        "type": "command",
+        "bash": "node .ai-sdlc/hooks/post-write.mjs",
+        "powershell": "node .ai-sdlc/hooks/post-write.mjs",
+        "timeoutSec": 60
+      }
+    ]
+  }
+}
