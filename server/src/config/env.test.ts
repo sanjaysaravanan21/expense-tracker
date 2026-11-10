@@ -21,6 +21,14 @@ describe('parseEnv', () => {
     expect(parseEnv({ ...valid, NODE_ENV: 'production', CORS_ORIGIN: 'https://a.com' }).CORS_ORIGIN).toBe('https://a.com');
   });
 
+  it('only allows the disabled mail transport when NODE_ENV is test', () => {
+    expect(() => parseEnv({ ...valid, MAIL_TRANSPORT: 'disabled' })).toThrow(/MAIL_TRANSPORT/);
+    expect(() => parseEnv({ ...valid, NODE_ENV: 'production', CORS_ORIGIN: 'https://a.com', MAIL_TRANSPORT: 'disabled' })).toThrow(
+      /MAIL_TRANSPORT/,
+    );
+    expect(parseEnv({ ...valid, NODE_ENV: 'test', MAIL_TRANSPORT: 'disabled' }).MAIL_TRANSPORT).toBe('disabled');
+  });
+
   it('coerces PORT to a number', () => {
     expect(parseEnv({ ...valid, PORT: '8080' }).PORT).toBe(8080);
   });

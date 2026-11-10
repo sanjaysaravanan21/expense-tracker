@@ -63,14 +63,26 @@ npx vitest run --config client/vite.config.ts                 # client
 npm run test:ai                                               # guardrail and hook tests
 ```
 
-Browser E2E tests use Playwright with Chromium. Install the browser once, then run:
+### End-to-end tests (Playwright)
+
+Browser tests in `client/e2e/` drive the real UI against the real API and a dedicated MongoDB database; nothing is stubbed except email delivery.
+
+- **Isolation:** the API starts on port 4501 with `NODE_ENV=test` and `DB_URL=$E2E_DB_URL` (default `mongodb://127.0.0.1:27017/expense-tracker-e2e`). The database name must end in `-e2e`, otherwise the run refuses to start. Global setup and teardown drop it, so no data is left behind. Each test creates its own uniquely named user.
+- **OTP:** the API runs with `MAIL_TRANSPORT=disabled`, which skips sending email. The env schema only accepts that value when `NODE_ENV=test`, so production (and development) always send real OTPs. Tests read the generated OTP from the E2E database.
+- **Scenarios:** registration and login (incl. wrong OTP, duplicate and unknown users), adding and viewing an expense, validation errors, and per-user data isolation.
+- **Diagnostics:** traces, screenshots and video are kept for failures, plus an HTML report and API/Vite logs in the console.
 
 ```bash
-npx playwright install chromium
-npx playwright test --config client/playwright.config.ts
+npx playwright install chromium     # once
+mongod --dbpath <dir>               # or any MongoDB reachable at E2E_DB_URL
+npm run test:e2e
+npx playwright show-report node_modules/.cache/playwright/report
+npx playwright show-trace <path to trace.zip>
 ```
 
-These browser tests stub the API so they do not send email or access MongoDB. Server integration tests remain in Vitest and use `TEST_DB_URL`.
+CI (GitHub Actions): use a job with a `mongo:7` service, `npm ci`, `npx playwright install --with-deps chromium`, `npm run test:e2e` with `CI=true`, and upload `node_modules/.cache/playwright/` as an artifact on failure. Agent config under `.github/` is human-edited, so the workflow file is not added automatically.
+
+A Playwright MCP server is not configured: it is useful for ad-hoc, agent-driven browser exploration but is not repeatable and cannot replace these tests.
 
 ## API
 

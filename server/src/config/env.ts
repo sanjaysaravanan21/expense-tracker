@@ -14,6 +14,12 @@ const envSchema = z
     TRUST_PROXY: z.coerce.number().int().min(0).default(0),
     MAIL_USER: z.string().optional(),
     MAIL_KEY: z.string().optional(),
+    // "disabled" skips delivery so end-to-end tests can read the OTP from the test database.
+    MAIL_TRANSPORT: z.enum(['gmail', 'disabled']).default('gmail'),
+  })
+  .refine((env) => env.NODE_ENV === 'test' || env.MAIL_TRANSPORT !== 'disabled', {
+    path: ['MAIL_TRANSPORT'],
+    message: '"disabled" is only allowed when NODE_ENV=test',
   })
   .refine((env) => env.NODE_ENV !== 'production' || !env.CORS_ORIGIN.split(',').some((o) => o.trim() === '*'), {
     path: ['CORS_ORIGIN'],
