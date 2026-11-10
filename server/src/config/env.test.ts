@@ -34,9 +34,18 @@ describe('parseEnv', () => {
   });
 
   it('reports every problem with the variable name, without echoing secret values', () => {
-    const run = () => parseEnv({ JWT_SECRET: 'short' });
-    expect(run).toThrow(/DB_URL/);
+    const run = () => parseEnv({ DB_URL: 'mongodb://localhost/db', JWT_SECRET: 'short' });
     expect(run).toThrow(/JWT_SECRET/);
     expect(run).not.toThrow(/short/);
+  });
+
+  it('requires DB_URL in production', () => {
+    expect(() => parseEnv({ NODE_ENV: 'production', JWT_SECRET: 'a-secret-with-16+chars' })).toThrow(/DB_URL/);
+  });
+
+  it('allows a missing DB_URL outside production for mock data', () => {
+    const env = parseEnv({});
+    expect(env.DB_URL).toBeUndefined();
+    expect(env.MOCK_DATA).toBe('auto');
   });
 });

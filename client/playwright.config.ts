@@ -1,13 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
-import { API_PORT, API_URL, E2E_DB_URL, WEB_PORT, WEB_URL, assertSafeDbUrl } from './e2e/support/env';
-
-assertSafeDbUrl(E2E_DB_URL);
+import { API_PORT, API_URL, WEB_PORT, WEB_URL } from './e2e/support/env';
 
 export default defineConfig({
   testDir: './e2e',
   testMatch: '**/*.spec.ts',
-  globalSetup: './e2e/support/global-setup.ts',
-  globalTeardown: './e2e/support/global-teardown.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -26,7 +22,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      // Real API on its own port and database. Mail delivery is disabled (allowed only with NODE_ENV=test).
+      // Real API on its own port serving in-memory mock data, so no database is needed.
       command: 'npm --prefix .. run dev:server',
       url: `${API_URL}/server/health`,
       reuseExistingServer: false,
@@ -35,7 +31,7 @@ export default defineConfig({
       env: {
         NODE_ENV: 'test',
         PORT: String(API_PORT),
-        DB_URL: E2E_DB_URL,
+        MOCK_DATA: 'always',
         JWT_SECRET: 'e2e-only-secret-not-for-production',
         CORS_ORIGIN: WEB_URL,
         MAIL_TRANSPORT: 'disabled',

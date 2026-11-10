@@ -6,6 +6,11 @@
       "headers": {
         "X-MCP-Toolsets": "repos,pull_requests,actions"
       }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest", "--browser", "chromium", "--isolated"]
     }
   }
 }

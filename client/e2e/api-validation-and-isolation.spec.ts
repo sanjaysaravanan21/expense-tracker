@@ -1,4 +1,3 @@
-import { findItemId } from './support/db';
 import { API_URL } from './support/env';
 import { expect, loginViaApi, loginViaUi, newUser, registerViaApi, test, today } from './support/fixtures';
 
@@ -64,7 +63,7 @@ test.describe('access isolation', () => {
     const day = await request.get(`${API_URL}/items/day/${today()}`, { headers: { Authorization: otherToken } });
     expect((await day.json()).items).toEqual([]);
 
-    const itemId = await findItemId(owner.phoneNumber, 'Owner Only Cafe');
+    const itemId = (await created.json())._id;
     const edit = await request.put(`${API_URL}/items/${itemId}`, {
       headers: { Authorization: otherToken },
       data: { amount: 1 },

@@ -1,7 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { expect, test as base, type APIRequestContext, type Page } from '@playwright/test';
-import { readOtp } from './db';
-import { API_URL } from './env';
+import { API_URL, MOCK_OTP } from './env';
 
 export interface TestUser {
   fullName: string;
@@ -19,12 +18,11 @@ export async function registerViaApi(request: APIRequestContext, user: TestUser)
   expect(response.status()).toBe(201);
 }
 
-// Completes the real OTP flow against the API and returns the JWT.
+// Completes the OTP flow against the API (mock mode accepts a fixed OTP) and returns the JWT.
 export async function loginViaApi(request: APIRequestContext, user: TestUser): Promise<string> {
   const signIn = await request.post(`${API_URL}/users/sign-in`, { data: { phoneNumber: user.phoneNumber } });
   expect(signIn.status()).toBe(200);
-  const otp = await readOtp(user.phoneNumber);
-  const verify = await request.post(`${API_URL}/users/verify-otp`, { data: { phoneNumber: user.phoneNumber, otp } });
+  const verify = await request.post(`${API_URL}/users/verify-otp`, { data: { phoneNumber: user.phoneNumber, otp: MOCK_OTP } });
   expect(verify.status()).toBe(200);
   return (await verify.json()).userDetails.token;
 }
@@ -34,7 +32,7 @@ export async function loginViaUi(page: Page, user: TestUser): Promise<void> {
   await page.getByPlaceholder('Enter your phone number').fill(user.phoneNumber);
   await page.getByRole('button', { name: 'Get OTP' }).click();
   await page.getByPlaceholder('Enter the OTP').waitFor();
-  await page.getByPlaceholder('Enter the OTP').fill(await readOtp(user.phoneNumber));
+  await page.getByPlaceholder('Enter the OTP').fill(MOCK_OTP);
   await page.getByRole('button', { name: 'Verify OTP' }).click();
   await expect(page).toHaveURL('/');
 }
