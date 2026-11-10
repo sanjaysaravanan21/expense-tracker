@@ -24,5 +24,7 @@ Then:
 - AC traceability table.
 - Checks run and results.
 - PR description: Summary, What changed (client/server), How tested, Risk and rollout notes, Linked story.
+- Verify that behavior changes have relevant tests, bug fixes have regression coverage, and integration tests are present when cross-layer behavior warrants them. Record any uncovered layer as missing or N/A with a reason.
+- Verify screenshot evidence for visible changes: after screenshots for features, before-and-after screenshots for bug fixes when practical. Require an explanation when evidence is not applicable or unavailable.
 
 `verdict: pass` only if there are no `critical`/`high` findings, every AC has evidence, and all checks are green.

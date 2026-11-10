@@ -8,7 +8,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test:ai": "node --test .ai-sdlc/hooks/guard.test.mjs .ai-sdlc/guardrails/guardrails.test.mjs",
+    "test:ai": "node --test .ai-sdlc/hooks/guard.test.mjs .ai-sdlc/guardrails/guardrails.test.mjs .ai-sdlc/hooks/attempts.test.mjs .ai-sdlc/hooks/budget.test.mjs",
     "ai:scope": "node .ai-sdlc/guardrails/set-scope.mjs",
     "ai:sanitize": "node .ai-sdlc/guardrails/sanitize-input.mjs",
     "ai:validate": "node .ai-sdlc/guardrails/pre-commit-validator.mjs",
@@ -22,13 +22,18 @@
     "check-types": "tsc -p server/tsconfig.json && tsc -p client/tsconfig.json",
     "lint": "eslint . && eslint client",
     "test": "vitest run",
-    "test:client": "vitest run --config client/vite.config.ts"
+    "test:client": "vitest run --config client/vite.config.ts",
+    "test:e2e": "playwright test --config client/playwright.config.ts",
+    "ai:budget": "node .ai-sdlc/guardrails/budget.mjs",
+    "ai:usage": "node .ai-sdlc/guardrails/usage.mjs",
+    "ai:attempts": "node .ai-sdlc/guardrails/attempts.mjs"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": "eslint --max-warnings=0 --no-warn-ignored"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

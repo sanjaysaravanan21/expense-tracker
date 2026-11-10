@@ -4,8 +4,27 @@
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/",
       "headers": {
+        "Authorization": "Bearer ${env:GITHUB_MCP_TOKEN}",
         "X-MCP-Toolsets": "repos,pull_requests,actions"
       }
+    },
+    "atlassian": {
+      "type": "http",
+      "url": "https://mcp.atlassian.com/v2/mcp",
+      "headers": {
+        "Authorization": "Basic ${env:ATLASSIAN_MCP_BASIC}"
+      }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest",
+        "--browser",
+        "chromium",
+        "--isolated"
+      ]
     }
   }
 }

@@ -15,5 +15,4 @@ coverage
 .ai-sdlc/state/*
 !.ai-sdlc/state/.gitkeep
 
-.vscode/*
 !.vscode/extensions.json

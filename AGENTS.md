@@ -57,4 +57,8 @@ npm run ai:scope -- --story "ID" server/src/features/items/   # set story scope
 npm run ai:scope -- --clear
 npm run ai:sanitize -- ticket.txt                              # strip PII before prompting
 npm run ai:validate                                            # staged-change secret/scope check
+npm run ai:attempts -- run <command>                           # run a check and count failures (3 per failure, 8 per story)
+npm run ai:attempts -- status                                  # attempt counters; `extend`/`reset` are user-only
+npm run ai:budget -- status                                    # story tool-call/KB budget (150 calls, ~600 KB); `stage <name>`, `extend`/`reset` (user-only)
+npm run ai:usage -- <agent-log.jsonl> --story "ID"             # estimate tokens/cost from an agent log; `report` totals
 ```

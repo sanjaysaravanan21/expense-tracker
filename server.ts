@@ -1,11 +1,11 @@
 import { createApp } from '@/app/app';
 import { getEnv } from '@/config/env';
-import { connectDb, disconnectDb } from '@/lib/db';
+import { connectDbOrMock, disconnectDb } from '@/lib/db';
 
 async function main() {
   const { PORT } = getEnv();
-  await connectDb();
-  console.warn('Connected to MongoDB');
+  const mode = await connectDbOrMock();
+  console.warn(mode === 'mongo' ? 'Connected to MongoDB' : 'Running with mock data (login with 9999999999, OTP 123456)');
 
   const server = createApp().listen(PORT, () => console.warn('Server listening on', PORT));
 
