@@ -63,6 +63,15 @@ npx vitest run --config client/vite.config.ts                 # client
 npm run test:ai                                               # guardrail and hook tests
 ```
 
+Browser E2E tests use Playwright with Chromium. Install the browser once, then run:
+
+```bash
+npx playwright install chromium
+npx playwright test --config client/playwright.config.ts
+```
+
+These browser tests stub the API so they do not send email or access MongoDB. Server integration tests remain in Vitest and use `TEST_DB_URL`.
+
 ## API
 
 `/items` routes require an `Authorization` header with the JWT (raw token or `Bearer <token>`) and only touch the caller's data.

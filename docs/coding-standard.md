@@ -29,6 +29,7 @@ Dependency direction (enforced in review): `app → features → shared (lib/com
 
 ## 2. Naming & files
 
+- Branch names: use `issue-<number>-<short-kebab-case-title>` when an issue number is available (for example, `issue-42-add-monthly-summary`). If there is no issue number, use `issue-<short-kebab-case-title>` (for example, `issue-improve-monthly-summary`). Keep names lowercase and concise; use only letters, numbers, and hyphens.
 - Server files: `<feature>.<role>.ts` (`item.service.ts`, `item.routes.ts`, `item.schema.ts`, `item.model.ts`). Shared/lib files: `kebab-case.ts`.
 - Client: React components `PascalCase.tsx` (one main component per file); non-component modules `kebab-case.ts`; hooks `useXxx`.
 - Types/interfaces `PascalCase`; variables/functions `camelCase`; constants `UPPER_SNAKE_CASE` only for true constants.
@@ -67,6 +68,9 @@ Dependency direction (enforced in review): `app → features → shared (lib/com
 - Arrange-Act-Assert; one behavior per test; descriptive names (`it('rejects an expense without an amount')`).
 - Cover happy path, validation failures, auth (401/403), and user data isolation for server features.
 - No real network, real DB beyond the test DB helper, sleeps, or order-dependent tests. Never disable or weaken existing tests.
+- Every behavior change and bug fix adds or updates regression tests. Use unit tests for isolated logic and integration tests when API, persistence, authentication, or component boundaries are involved; include both when they cover distinct risks.
+- Use Playwright for meaningful end-to-end browser journeys; don’t duplicate lower-level assertions without added value.
+- If a relevant test layer is not added, explain why and identify what evidence covers the behavior.
 
 ## 7. Review checklist
 

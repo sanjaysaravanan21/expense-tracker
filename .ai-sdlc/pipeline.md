@@ -25,7 +25,7 @@ GitHub is both the issue tracker and the SCM, through the GitHub MCP server conf
 | 2 | Approve | user | go / change | user confirms spec and scope (always for `standard` and `architectural`) |
 | 3 | Branch and scope | orchestrator | story branch, `.ai-sdlc/state/scope.json` | clean working tree, not on a protected branch; `set-scope.mjs` accepts every path |
 | 4 | Implement | `developer` (tests via `test-writer` when the spec calls for broader coverage) | code and tests, changed-file list | targeted tests green via self-healing loop (max 3 attempts) |
-| 5 | Review | `reviewer` | findings, AC traceability, PR description | no `critical`/`high` findings; checks green |
+| 5 | Review | `reviewer` | findings, AC traceability, test coverage, screenshot evidence, PR title and description | no `critical`/`high` findings; checks green |
 | 6 | Validate | orchestrator | clean `npm run ai:validate` | no secrets, no out-of-scope files |
 | 7 | Commit | orchestrator | Conventional Commit(s) on the story branch | only scoped files staged by explicit path; pre-commit hook passes |
 | 8 | Push and PR | orchestrator | pushed branch, PR linked to the issue | user confirmed; PR created through GitHub MCP (or `gh`); otherwise hand the PR text to the user |
@@ -45,7 +45,7 @@ All git actions (stages 3, 7, 8) follow the `git-operations` skill. Only the orc
 8. Run `reviewer`. On `critical`/`high` findings, send them to `developer` (one repair round; then escalate to the user).
 9. `npm run ai:validate` (staged diff) and `npm run check-types && npm run lint && npm run test -- --run` must pass.
 10. Commit: stage the changed files by explicit path (never `git add .`), check `git diff --staged`, then commit with a Conventional Commit message that references the issue (`Refs: #123`). If the pre-commit hook fails, fix the cause (through `developer` if code changes are needed) and create a new commit.
-11. Ask the user to confirm, then `git push -u origin <branch>`. Open the PR through GitHub MCP with the `git-operations` PR template, filled from the reviewer's traceability table and checks. Put `Closes #123` in the body only if the user wants the issue closed on merge; otherwise use `Refs #123`. Open as draft if any check is incomplete. Without MCP or `gh`, give the user the PR title and body.
+11. Ask the user to confirm, then `git push -u origin <branch>`. Before creating or handing off PR text, read `.github/PULL_REQUEST_TEMPLATE.md` and use it as the single source of truth for the PR body. Do not maintain tool-specific copies. Fill it with the reviewer's evidence and actual check results. Create the PR through GitHub MCP with the Conventional Commit-style title. Put `Closes #123` in the body only if the user wants the issue closed on merge; otherwise use `Refs #123`. Open as draft if any check is incomplete. Without MCP or `gh`, give the user the PR title and completed template body.
 12. Read the PR's check status and workflow runs through MCP. Report passes and failures with the failing job and the first error. Do not push fixes without the user's go-ahead.
 13. Optionally (ask first), comment on the issue with the PR link and a two-line summary.
 14. Clear the scope: `node .ai-sdlc/guardrails/set-scope.mjs --clear`.

@@ -22,13 +22,15 @@
     "check-types": "tsc -p server/tsconfig.json && tsc -p client/tsconfig.json",
     "lint": "eslint . && eslint client",
     "test": "vitest run",
-    "test:client": "vitest run --config client/vite.config.ts"
+    "test:client": "vitest run --config client/vite.config.ts",
+    "test:e2e": "playwright test --config client/playwright.config.ts"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": "eslint --max-warnings=0 --no-warn-ignored"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.0",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",

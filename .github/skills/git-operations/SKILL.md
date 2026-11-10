@@ -1,6 +1,6 @@
 ---
 name: git-operations
-description: Perform git work safely - inspect status and diffs, branch, stage, commit, push, and open or update a pull request, plus common recovery tasks. Use whenever code must be committed, pushed, or turned into a PR, or when a git state question comes up.
+description: Perform git work safely - inspect status and diffs, branch, stage, commit, push, and open or update a pull request, plus common recovery tasks.
 ---
 
 # Git operations
@@ -40,7 +40,7 @@ Conventional Commits, imperative mood, subject at most 72 characters, no trailin
 ```
 <type>(<scope>): <subject>
 
-<body: what and why, wrapped at 100 chars; optional>
+<body: what and why, wrapped at 100 characters; optional>
 
 Refs: EXP-123
 ```
@@ -75,27 +75,12 @@ Before opening: `npm run check-types`, `npm run lint` and `npm run test -- --run
 - Preferred: use the SCM integration (GitHub MCP or `gh pr create`) when connected.
 - Otherwise: push the branch and give the user the PR title and body to paste.
 - Base branch: `main` unless told otherwise. Open as draft if checks are incomplete.
-- Title: same format as a commit subject.
-- Body template:
-
-```markdown
-## Summary
-What changed and why (link the ticket).
-
-## Changes
-- file or area: one line each
-
-## Acceptance criteria
-| AC | Evidence (test/file/command) | Result |
-|----|------------------------------|--------|
-
-## Testing
-Commands run with pass/fail.
-
-## Risks / notes
-```
-
-- Do not merge, approve, or close PRs yourself. Never put secrets, internal URLs, or PII in titles or bodies.
+- Title: use the Conventional Commit format, such as `feat(items): add recurring expense support`.
+- Before creating a PR or handing off PR text, read `.github/PULL_REQUEST_TEMPLATE.md` and use it as the single source of truth for the PR body. Do not maintain tool-specific copies.
+- Fill in the template with a one-line description, relevant implementation or fix evidence, actual test coverage and results, acceptance criteria, risk notes, and the linked story.
+- Include screenshots for visible changes. For bug fixes, include before-and-after screenshots when practical. Use synthetic data; do not fabricate evidence. If screenshots or a test layer do not apply or are unavailable, mark them N/A and explain why.
+- Record actual commands and outcomes in the test coverage section. Do not claim tests passed without command output.
+- Put `Closes #123` in the body only if the user wants the issue closed on merge; otherwise use `Refs #123`.
 
 ## 7. General operations
 
@@ -107,8 +92,7 @@ Commands run with pass/fail.
 | Fix last commit message | `git commit --amend` | Only if not pushed |
 | Revert a pushed commit | `git revert <sha>` | Preferred over reset |
 | Park work | `git stash push -m "<msg>"`, then `git stash pop` | Name stashes |
-| Resolve conflicts | edit files, `git add <path>`, `git rebase --continue` | Keep both sides' intent; re-run tests |
-| Inspect history | `git log --oneline --graph -20`, `git show <sha>`, `git blame <path>` | Read-only |
+| Resolve conflicts | edit files, `git add <path>`, `git rebase --continue` | Keep both sides' intent; re-run checks |
 | Delete merged branch | `git branch -d <branch>` | Only after merge; use `-d`, not `-D` |
 
 ## Never, without explicit user confirmation
