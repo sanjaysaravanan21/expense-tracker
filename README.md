@@ -74,8 +74,8 @@ approvals.
 
 ### 1. Prepare credentials
 
-- **GitHub:** Create a [fine-grained personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) restricted to the repository and permissions needed for the planned operations. PR creation needs write permission; reading repository data and checks requires the corresponding read permissions. Git operations such as `git push` may require separate Git credentials.
-- **Atlassian:** Use a Jira Cloud account that can access the intended site and create an [Atlassian MCP personal API token](https://support.atlassian.com/atlassian-ai-gateway/docs/configure-authentication-via-api-token/) with the needed scopes. Your organization must allow API-token authentication for MCP. Reading stories and comments needs read access; posting a comment also needs write access.
+- **GitHub (`GITHUB_MCP_TOKEN`):** In [fine-grained token settings](https://github.com/settings/personal-access-tokens), select **Generate new token**, name it, choose an expiration and resource owner, and restrict it to this repository. Grant Contents and Actions read-only and, if creating PRs, Pull requests read and write; Metadata read-only is normally selected automatically. Generate and copy the token. Git operations such as `git push` may require separate Git credentials.
+- **Atlassian (`ATLASSIAN_MCP_BASIC`):** Create an [Atlassian MCP personal API token](https://id.atlassian.com/manage-profile/security/api-tokens?autofillToken&expiryDays=max&appId=mcp-v2&selectedScopes=all) for an account that can access the Jira site. The link preselects all scopes; use **Back** to select only those needed. Copy the token and note its owner's account email. The next step combines them into `ATLASSIAN_MCP_BASIC`. Your organization must allow API-token authentication for MCP; posting comments requires appropriate write access.
 - Use short-lived, least-privilege credentials. Never commit tokens, put them in MCP configuration files, paste them into chat, or show them in screenshots, logs or demos.
 
 ### 2. Supply environment variables
