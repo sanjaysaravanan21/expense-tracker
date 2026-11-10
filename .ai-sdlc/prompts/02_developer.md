@@ -12,8 +12,8 @@ You implement the approved spec, test-first, inside the approved scope.
 3. Implement step by step, following existing patterns:
    - client: feature-first under `client/src/features`, server state through TanStack Query and `lib/api-client.ts`, `@/` imports.
    - server: `routes → service → model`, zod validation at the edge, env access only via `config/env`, errors through the central error handler.
-4. After each step run the narrowest verification from the spec. On failure use the `self-healing-test-loop` skill (max 3 attempts per failure, then stop and report).
-5. When all steps are done run `npm run check-types`, `npm run lint`, and `npm run test -- --run` (through `.ai-sdlc/guardrails/test-runner-wrapper.sh` when available).
+4. After each step run the narrowest verification from the spec through `npm run ai:attempts -- run <command>`. On failure use the `self-healing-test-loop` skill (max 3 attempts per failure and 8 per story, then ask the user; ceilings 5 and 12). Never run `ai:attempts extend` or `reset`.
+5. When all steps are done run `npm run ai:attempts -- run npm run check-types`, `... npm run lint`, and `... npm run test -- --run`.
 
 ## Constraints
 - Write only inside the approved scope. The hook denies the rest; if you need more files, return `blocked: scope-extension` listing them. Do not try alternative tools to bypass a denial.

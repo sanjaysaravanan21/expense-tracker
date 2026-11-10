@@ -4,6 +4,8 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import { attemptsDecision } from './attempts-lib.mjs';
+import { budgetStep } from './budget-lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 export const repoRoot = resolve(here, '..', '..');
@@ -36,7 +38,11 @@ const approvalCommands = [
   { pattern: /\b(?:bash|sh|zsh|python\d*|ruby|perl)\s+-c\b|\bnode\s+(?:-e|--eval)\b/i, reason: 'Inline code execution requires approval.' },
   { pattern: /\beval\b/i, reason: 'Dynamic shell evaluation requires approval.' },
   { pattern: /\b(?:npm|npx|pnpm|yarn)\s+(?:install|i|add|exec|dlx|publish)\b/i, reason: 'Package installation or execution requires approval.' },
+  { pattern: /\bai:attempts\b[^;\n]*\b(?:extend|reset)\b|attempts\.mjs\s+(?:extend|reset)\b/i, reason: 'Granting or resetting attempts requires the user.' },
+  { pattern: /\bai:budget\b[^;\n]*\b(?:extend|reset)\b|budget\.mjs\s+(?:extend|reset)\b/i, reason: 'Granting or resetting work budget requires the user.' },
 ];
+
+const verificationCommands = /^(?:npm\s+(?:run\s+(?:test|lint|check-types|ai:attempts\s+(?:--\s+)?run)|test)|npx\s+(?:vitest|tsc|eslint))(?:\s|$)/i;
 
 const safeCommands = [
   /^(?:pwd|ls|rg|cat|head|tail|wc)(?:\s|$)/i,
@@ -129,13 +135,17 @@ export function inScope(relPath, allowed) {
   return allowed.some((entry) => (entry.endsWith('/') ? relPath.startsWith(entry) : relPath === entry));
 }
 
-function shellDecision(command, config) {
+function shellDecision(command, config, root) {
   if (typeof command !== 'string') return { permission: 'deny', reason: 'Unable to inspect this shell command.' };
   if (commandTouchesSensitive(command, config)) return { permission: 'deny', reason: 'Shell access to .env, key or other sensitive files is blocked.' };
   const blocked = blockedCommands.find(({ pattern }) => pattern.test(command));
   if (blocked) return { permission: 'deny', reason: blocked.reason };
   const approval = approvalCommands.find(({ pattern }) => pattern.test(command));
   if (approval) return { permission: 'ask', reason: approval.reason };
+  if (verificationCommands.test(command.trim())) {
+    const gate = attemptsDecision(config, root);
+    if (gate.permission !== 'allow') return gate;
+  }
   if (/[;&|`$()<>\n]/.test(command)) return { permission: 'ask', reason: 'Shell operators or expansions require review.' };
   if (safeCommands.some((p) => p.test(command.trim()))) return { permission: 'allow' };
   return { permission: 'ask', reason: 'This command is not in the safe-command set.' };
@@ -145,7 +155,7 @@ export function decide(payload, { root = repoRoot, config = loadConfig(root), en
   const n = normalize(payload);
   const allow = { permission: 'allow' };
 
-  if (n.kind === 'shell') return shellDecision(n.command, config);
+  if (n.kind === 'shell') return shellDecision(n.command, config, root);
   if (n.kind !== 'read' && n.kind !== 'write') return allow;
 
   if (n.input == null && n.paths.length === 0) {
@@ -200,7 +210,12 @@ async function readStdin() {
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
     const payload = JSON.parse(await readStdin());
-    process.stdout.write(`${JSON.stringify(format(decide(payload), normalize(payload)))}\n`);
+    const n = normalize(payload);
+    let decision = decide(payload);
+    // Count the call against the story work budget only when it was otherwise allowed.
+    // Tab-completion reads are background noise, not agent work.
+    if (decision.permission === 'allow' && n.event !== 'afterFileEdit' && n.event !== 'beforeTabFileRead') decision = budgetStep(n, loadConfig(), repoRoot);
+    process.stdout.write(`${JSON.stringify(format(decision, n))}\n`);
   } catch (error) {
     process.stderr.write(`ai-sdlc guard failed closed: ${error.message}\n`);
     process.exitCode = 2;

@@ -52,6 +52,26 @@ exploration. Jira and GitHub MCP authentication uses environment variables
 separate from the application's `.env` setup. No Jira site URL or GitHub
 repository URL environment variable is required.
 
+### Agents and when to use them
+
+Agent definitions live in [`.github/agents/`](./.github/agents/) for GitHub
+Copilot and [`.claude/agents/`](./.claude/agents/) for Claude Code. Both use the
+shared prompts and guardrails in `.ai-sdlc/`. For Jira work, use the
+orchestrator rather than running the stages independently.
+
+| Agent | Use it when… | Responsibility and boundaries |
+|-------|--------------|-------------------------------|
+| `story-to-code` | Implementing a Jira story end to end | Orchestrates analysis, approval, scoped implementation, review and delivery through [the pipeline](./.ai-sdlc/pipeline.md). Available as a GitHub Copilot agent; Claude Code uses the shared `story-to-code` skill. |
+| `pm-analyst` | A story needs to be clarified and scoped | Read-only: produces acceptance criteria, risk tier, impacted paths, tests and a proposed scope. |
+| `developer` | The approved spec and scope are ready | Implements the change test-first within scope. Does not approve its own attempt or budget extensions. |
+| `test-writer` | The spec calls for focused or broader test coverage | Adds and updates tests only; hands production-code changes to `developer`. |
+| `reviewer` | Implementation is ready for independent verification | Checks the diff against the spec, tests and acceptance criteria; reports findings without fixing code. |
+| `explore` | You have a codebase question or need to find where a change belongs | Read-only: traces structure and behavior, then suggests relevant files; does not implement changes. |
+
+For one-off questions, use `explore`. For ticketed work, start with
+`story-to-code`; it runs the other stages in order and pauses for required user
+approvals.
+
 ### 1. Prepare credentials
 
 - **GitHub:** Create a [fine-grained personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) restricted to the repository and permissions needed for the planned operations. PR creation needs write permission; reading repository data and checks requires the corresponding read permissions. Git operations such as `git push` may require separate Git credentials.
@@ -128,6 +148,28 @@ token expiry, scopes, site/repository permissions and organization policies;
 do not print the variables while troubleshooting. If Jira is unavailable, paste
 the story for the pipeline and post any requested update manually. If GitHub
 integration is unavailable, use the pipeline's PR text handoff.
+
+### 4. Verify the AI-SDLC setup
+
+Before starting a Jira story or bug fix, confirm the local setup is ready:
+
+- [ ] Confirm `npm run test:ai` passes.
+- [ ] Confirm the commands are available: `npm run ai:attempts -- status` and
+  `npm run ai:budget -- status`.
+- [ ] If using Jira/GitHub MCP, run a read-only smoke test: ask the agent to
+  list Jira sites and confirm it can read a known, non-sensitive issue; then
+  ask it to read this repository's metadata through GitHub MCP. Verify the
+  returned site, issue key/title, and repository name match what you expect.
+  Do not test by creating a Jira comment, branch, or PR.
+- [ ] For a Jira story, use `story-to-code`. Approve the sanitized spec and
+  scope before implementation; check the budget and attempt status after each
+  stage. Run verification through `npm run ai:attempts -- run <command>`.
+- [ ] For an ad-hoc bug fix, reproduce the bug, add or identify a regression
+  test, review the diff, and confirm the relevant checks pass. Set a budget
+  stage if you want the story activity budget to apply.
+- [ ] Treat budget counters as activity proxies, not token or cost tracking.
+  `ai:usage` could not read token usage from the VS Code Copilot logs checked;
+  use GitHub/Copilot billing for actual spend.
 
 ## Run
 
