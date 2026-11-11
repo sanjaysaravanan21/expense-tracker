@@ -3,7 +3,7 @@
 Single source for orchestration. Used by the Copilot `story-to-code` agent, the Claude/Cursor `story-to-code` skill, and humans.
 
 ```text
-Jira story → Fetch → Sanitize → PM/Analyst → [spec approval] → Branch + Set scope → [In Progress approval + transition] → Developer ⇄ self-heal → Reviewer → Validate → Commit → [confirm] → Push + GitHub PR → [In Review approval + transition when PR is ready] → CI check → [after merge: Done approval + transition] → [confirm] Jira comment
+Jira story → Fetch → Sanitize → PM/Analyst → [clarifications when needed] → [spec approval] → Branch + Set scope → [In Progress approval + transition] → Developer ⇄ self-heal → Reviewer → Validate → Commit → [confirm] → Push + GitHub PR → [In Review approval + transition when PR is ready] → CI check → [after merge: Done approval + transition] → [confirm] Jira comment
 ```
 
 ## Integrations
@@ -29,8 +29,8 @@ Jira Cloud is the issue tracker, through Atlassian MCP. GitHub is the SCM and CI
 | # | Stage | Who | Output | Gate |
 |---|-------|-----|--------|------|
 | 0 | Fetch and sanitize | orchestrator | clean story text | Jira story read via Atlassian MCP or pasted by the user; PII, internal IPs and DB URIs removed by `sanitize-input.mjs` |
-| 1 | Analyze | `pm-analyst` | spec: ACs, risk tier, scope paths, tests-first list | open questions answered by the user (prompted, not blocking); ≤ 8 files and ≤ 6 steps, else `blocked: needs-split` |
-| 2 | Approve | user | approved spec and scope | user confirms spec and scope |
+| 1 | Analyze | `pm-analyst` | spec: ACs, risk tier, scope paths, tests-first list | open questions resolved by the user; ≤ 8 files and ≤ 6 steps, else `blocked: needs-split` |
+| 2 | Approve | user | approved spec and scope | user explicitly confirms spec and scope |
 | 3 | Branch and scope | orchestrator | story branch and `.ai-sdlc/state/scope.json` | clean working tree, not on a protected branch; `set-scope.mjs` accepts every path |
 | 4 | Start implementation | orchestrator | Jira status `In Progress` | before implementation, user separately approves the transition; orchestrator verifies the current status and available transition, then performs it |
 | 5 | Implement | `developer` | code and tests, changed-file list | targeted tests green via self-healing loop, max 3 attempts per failure and 8 per story; more only with user approval |
@@ -43,16 +43,32 @@ Jira Cloud is the issue tracker, through Atlassian MCP. GitHub is the SCM and CI
 
 Use `test-writer` when the spec calls for broader coverage. All git actions follow the `git-operations` skill. Only the orchestrator runs state-changing git commands.
 
+## Clarification and approval interaction
+
+The user-facing orchestrator owns all questions and approvals; stage agents return their questions to the orchestrator and do not interact with the user directly.
+
+For PM/Analyst questions:
+
+1. Use the interactive question tool available in the current client, such as `ask_user`, if available.
+2. Present one form with one field per question. Offer the analyst's suggested choices, identify any recommended default, and allow a custom answer for each question. If the tool cannot provide custom input alongside choices, include an `Other` choice and collect its text before continuing.
+3. Wait for the response. Treat selected choices and custom text as clarifications for the current story, not as a new unrelated request.
+4. Do not interpret an unanswered field, cancellation, declined form, or recommended default as the user's answer. Do not silently proceed with assumptions.
+5. If the interactive tool is unavailable, report that limitation, present the questions and choices in the conversation, and pause. On the user's next response, resume this clarification gate with their answers.
+6. If the form is declined, cancelled, or incomplete, pause without branching, setting scope, transitioning Jira, or implementing. Resume only when the user supplies answers or explicitly chooses to use the stated assumptions. Label any explicitly accepted assumptions in the spec.
+7. Clarification answers do not approve the spec, scope, Jira transitions, push, or PR. Obtain the separate approvals required by the relevant gates.
+
+Run the orchestrator in a user-facing session that can receive responses. If invoked as a subagent that cannot ask the user or resume after a reply, return the questions and draft spec to the parent orchestrator; the parent must perform this interaction and resume the pipeline.
+
 ## Orchestrator procedure
 
 1. Get the story. If given a Jira key such as `EXP-123` or a Jira URL, read the story, acceptance criteria and relevant comments through Atlassian MCP. Ask which Jira site to use if necessary. Save the text to a temporary file outside the repo or pipe it directly.
 2. Sanitize it: `node .ai-sdlc/guardrails/sanitize-input.mjs <file>` (or pipe stdin). Use the output, not the original, from here on.
-3. Run `npm run ai:budget -- stage pm-analyst`, then run `pm-analyst` with the sanitized story. If it returns `blocked: needs-split`, relay the proposed split and stop. If it returns open questions, do not stop: ask them to the user with `ask_user` (one form, one field per question, with the analyst's suggested options and defaults), then re-run `pm-analyst` once with the sanitized story plus the answers appended as "Clarifications (from the user)". Repeat at most 2 rounds; if questions remain, show them and stop. A declined form means proceed with the stated assumptions and label them as assumptions in the spec.
-4. Show the spec to the user, include `npm run ai:budget -- status`, and wait for approval.
+3. Run `npm run ai:budget -- stage pm-analyst`, then run `pm-analyst` with the sanitized story. If it returns `blocked: needs-split`, relay the proposed split and stop. If it returns open questions, collect answers as described in "Clarification and approval interaction". Re-run `pm-analyst` with the sanitized story and all answers appended as "Clarifications (from the user)". Allow at most two clarification rounds. If questions remain after the second round, show them and stop; do not proceed to approval or implementation. Preserve the draft spec and clarification context so the user can resume the same story.
+4. Show the revised spec and scope to the user, include `npm run ai:budget -- status`, and request explicit approval. Wait for approval; do not infer it from clarification answers. If the user requests changes, revise the spec and request approval again. If the user declines or cancels, stop.
 5. Inspect git state (`git status --short --branch`). If the working tree has unrelated changes, stop and ask the user. Create a story branch using the current repository convention and include the lowercase Jira key, for example `issue-exp-123-add-summary`. Never work on `main`/`master`/`develop`.
 6. Run `node .ai-sdlc/guardrails/set-scope.mjs --story "EXP-123" <path> ...` using the actual Jira key and the spec's scope list.
 7. Before implementation, ask separately for approval to transition the Jira issue to `In Progress`. Include the issue key, current status, target status, and milestone. Verify the available Jira transition; execute it only after explicit approval. If the user declines, the transition is unavailable, or Jira MCP fails, leave the issue unchanged, report the situation, and ask the user how to proceed. Do not begin implementation without resolving this gate.
-8. Run `npm run ai:budget -- stage developer`, then run `developer` with the approved spec. If it returns `blocked: scope-extension`, ask the user, then re-run step 6 with the extra paths (same story key, so counters are kept). If a tool call is answered with "Attempt limit reached", stop and ask the user; never run `ai:attempts` `extend`/`reset` yourself. If a tool call is answered with "Work budget reached", run `npm run ai:budget -- extend`; the guard will request user approval before it executes. Continue only if approved. If the user declines, stop and summarise what remains. Run `npm run ai:budget -- reset` only when the user explicitly chooses to reset the budget, and continue only after the guard receives approval.
+8. Run `npm run ai:budget -- stage developer`, then run `developer` with the approved spec. If it returns `blocked: scope-extension`, ask the user, then re-run step 6 with the extra paths (same story key, so counters are kept). If a tool call is answered with "Attempt limit reached", stop and ask the user; never run `ai:attempts` `extend`/`reset` yourself. If a tool call is answered with "Work budget reached", stop and ask the user. Only the user may run `npm run ai:budget -- extend` or `reset`. Continue only after the user approves and completes the necessary action. If the user declines, stop and summarise what remains.
 9. Run `npm run ai:budget -- stage reviewer` and `reviewer`. On `critical`/`high` findings, send them to `developer` (`stage developer`) for at most `maxReviewRepairRounds` (1) repair round; if findings remain, escalate to the user with the findings and options (extend / accept risk / stop). Report `npm run ai:budget -- status` and `npm run ai:attempts -- status` to the user after each stage.
 10. Stage only the approved changed files by explicit path, inspect `git diff --staged`, and run `npm run ai:validate`. Run `npm run ai:attempts -- run npm run check-types`, `... npm run lint` and `... npm run test -- --run`. These checks must pass.
 11. Commit with a Conventional Commit message referencing the actual Jira key, for example `Refs: EXP-123`. If the pre-commit hook fails, fix the cause through `developer` when code changes are needed, revalidate, and create a new commit.
@@ -99,5 +115,5 @@ Hooks cannot see real tokens, so the guard enforces tool calls and estimated KB 
 - Per stage (soft cap, ask): `pm-analyst` 30, `developer` 100, `reviewer` 40 calls. The orchestrator sets the stage before each stage with `npm run ai:budget -- stage <name>`.
 - Reading a whole file over 40 KB asks first; use `view_range` or search instead.
 - At each stage boundary the orchestrator runs `npm run ai:budget -- status` and reports it to the user before continuing.
-- Agents may request an extension by running `npm run ai:budget -- extend`; the guard requires user approval before executing it. Run `reset` only when the user explicitly chooses that option; it also requires guard approval. If approval is declined, stop. Agents may run `status` and `stage` without approval.
+- Only the user may run `npm run ai:budget -- extend` or `reset`. If an extension is needed, stop and ask the user. If approval is declined, stop. Agents may run `status` and `stage` without approval.
 - Real usage: `npm run ai:usage -- <agent-log.jsonl> --story "ID"` estimates tokens and cost (placeholder prices in `pricing`), `ai:usage -- report` totals them. Copilot bills premium requests, so treat dollars as an estimate and set the real spend cap in GitHub billing settings.
