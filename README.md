@@ -72,6 +72,40 @@ For one-off questions, use `explore`. For ticketed work, start with
 `story-to-code`; it runs the other stages in order and pauses for required user
 approvals.
 
+### Local AI guardrail commands
+
+These npm scripts manage the local Story-to-Code guardrails. Run them from the
+repository root; the `--` separates npm's options from the script arguments.
+Their counters and scope are stored under `.ai-sdlc/state/`.
+
+| Command | What it does |
+|---------|--------------|
+| `npm run ai:sanitize -- <ticket-file>` | Redacts configured email, phone, internal IP and MongoDB URI patterns from a ticket and prints the result. Review the output before sharing it with an AI; this is pattern-based and does not guarantee that all sensitive details are removed. |
+| `npm run ai:scope -- --story "EXP-123" <path> [<path>...]` | Set the allowed repository-relative paths for a story. Use directories ending in `/`; include all paths when updating the scope because a new invocation replaces the previous list. Paths must be within the configured write roots. |
+| `npm run ai:scope -- --clear` | Remove the current scope and clear attempt and work-budget counters. |
+| `npm run ai:validate` | Check staged changes for sensitive files, likely hardcoded secrets in added lines, and files outside the current story scope. It also runs as a pre-commit check. |
+| `npm run ai:attempts -- status` | Show verification-attempt counters. |
+| `npm run ai:attempts -- run <command> [args...]` | Run one verification command and record success or failure. Example: `npm run ai:attempts -- run npm run test -- --run`. The command runs directly (not through a shell), with a minimal environment that omits other caller variables such as database credentials; pipes and shell operators are not supported. |
+| `npm run ai:attempts -- extend [--story]` | Grant additional verification attempts. This is a user-controlled action; agents must not approve or run it themselves. |
+| `npm run ai:attempts -- reset` | Clear attempt counters. This is also user-controlled. |
+| `npm run ai:budget -- status` | Show the work-budget counters for tool calls and approximate context read, including the active stage if set. |
+| `npm run ai:budget -- stage <name>` | Set the budget stage to `pm-analyst`, `developer` or `reviewer`. |
+| `npm run ai:budget -- extend` / `npm run ai:budget -- reset` | Request a budget extension or clear the budget. These are user-controlled actions; agents must not approve them. |
+| `npm run ai:usage -- <log.jsonl> [--story "EXP-123"]` | Estimate token usage and cost from a compatible agent JSONL log and record the result locally. Logs may contain sensitive conversation context: keep them private and out of version control. The estimate uses placeholder prices and is not billing data. |
+| `npm run ai:usage -- report` | Show recorded usage estimates and totals. |
+
+For example, set a story scope and check its counters before work:
+
+```bash
+npm run ai:scope -- --story "EXP-123" server/src/features/items/ client/src/features/dashboard/
+npm run ai:attempts -- status
+npm run ai:budget -- status
+```
+
+Only story work started with a scope or budget stage is tracked against the
+story activity budget; it is an activity limit, not a measure of model tokens
+or spend. `npm run test:ai` runs the guardrail and hook tests.
+
 ### 1. Prepare credentials
 
 - **GitHub (`GITHUB_MCP_TOKEN`):** In [fine-grained token settings](https://github.com/settings/personal-access-tokens), select **Generate new token**, name it, choose an expiration and resource owner, and restrict it to this repository. Grant Contents and Actions read-only and, if creating PRs, Pull requests read and write; Metadata read-only is normally selected automatically. Generate and copy the token. Git operations such as `git push` may require separate Git credentials.
