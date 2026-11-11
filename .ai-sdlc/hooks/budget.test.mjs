@@ -18,10 +18,13 @@ test('asks at 150 calls, extends by 50, denies at 300', () => {
   assert.equal(evaluateBudget(s, b).permission, 'allow');
   s.calls = 150;
   assert.equal(evaluateBudget(s, b).permission, 'ask');
+  assert.match(evaluateBudget(s, b).reason, /npm run ai:budget -- extend/);
+  assert.match(evaluateBudget(s, b).reason, /continue only if approved/);
   extendBudget(s, b);
   assert.equal(evaluateBudget(s, b).permission, 'allow');
   s.calls = 300;
   assert.equal(evaluateBudget(s, b).permission, 'deny');
+  assert.match(evaluateBudget(s, b).reason, /Do not reset the budget unless the user explicitly chooses/);
   extendBudget(s, b);
   extendBudget(s, b);
   extendBudget(s, b);

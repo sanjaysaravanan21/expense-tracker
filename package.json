@@ -22,7 +22,6 @@
     "check-types": "tsc -p server/tsconfig.json && tsc -p client/tsconfig.json",
     "lint": "eslint . && eslint client",
     "test": "vitest run",
-    "test:jira": "node --import tsx --test scripts/jira-read.test.ts",
     "test:client": "vitest run --config client/vite.config.ts",
     "test:e2e": "playwright test --config client/playwright.config.ts",
     "ai:budget": "node .ai-sdlc/guardrails/budget.mjs",

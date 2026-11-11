@@ -3,7 +3,7 @@ import { getAuth, requireAuth } from '@/lib/auth';
 import { HttpError } from '@/lib/http-error';
 import { createItemBody, dateParams, itemIdParams, startDateParams, updateItemBody } from '@/features/items/item.schema';
 import { getDatesOfMonth, getDatesOfWeek, getWeekDay } from '@/utils/dates';
-import { generateId, itemsFor, type MockItem } from './mock-store';
+import { generateId, itemsFor, itemsForDates, type MockItem } from './mock-store';
 
 export const mockItemRouter = Router();
 
@@ -13,8 +13,7 @@ const publicItem = ({ _id: _omit, ...item }: MockItem) => item;
 const sum = (items: { amount: number }[]) => items.reduce((total, item) => total + item.amount, 0);
 
 function summarize(phoneNumber: string, dates: string[]) {
-  const items = itemsFor(phoneNumber)
-    .filter((item) => dates.includes(item.date))
+  const items = itemsForDates(phoneNumber, dates)
     .sort((a, b) => a.date.localeCompare(b.date))
     .map(publicItem);
   const series = dates.map((date) => ({
@@ -27,8 +26,7 @@ function summarize(phoneNumber: string, dates: string[]) {
 
 mockItemRouter.get('/day/:date', (req, res) => {
   const { date } = dateParams.parse(req.params);
-  const items = itemsFor(getAuth(res).phoneNumber)
-    .filter((item) => item.date === date)
+  const items = itemsForDates(getAuth(res).phoneNumber, [date])
     .map(publicItem);
   res.json({ totalAmount: sum(items), items });
 });

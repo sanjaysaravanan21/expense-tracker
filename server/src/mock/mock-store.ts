@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
+import { ITEM_CATEGORIES } from '@/features/items/item.schema';
 import { getWeekDay } from '@/utils/dates';
-import seed from './items.seed.json';
 
 export type MockItem = {
   category: string;
@@ -16,25 +16,12 @@ export type MockItem = {
 export type MockUser = { _id: string; fullName: string; phoneNumber: string; email: string };
 
 export const MOCK_OTP = '123456';
-// Pre-registered account that owns the seeded data; every other user starts empty.
 export const DEMO_PHONE = '9999999999';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
-const toMs = (date: string) => Date.parse(`${date}T00:00:00.000Z`);
 const newId = () => randomBytes(12).toString('hex');
 
-// Shifts the static seed so its latest entry is today, keeping the UI populated whenever it is run.
-function buildSeed(): MockItem[] {
-  const latest = Math.max(...seed.map((item) => toMs(item.date)));
-  const today = toMs(new Date().toISOString().slice(0, 10));
-  const shiftDays = Math.round((today - latest) / DAY_MS);
-  return seed.map((item) => {
-    const date = new Date(toMs(item.date) + shiftDays * DAY_MS).toISOString().slice(0, 10);
-    return { ...item, date, weekDay: getWeekDay(date) };
-  });
-}
-
 const itemsByPhone = new Map<string, (MockItem & { _id: string })[]>();
+const generatedDatesByPhone = new Map<string, Set<string>>();
 const users = new Map<string, MockUser>();
 
 function seedUsers(): void {
@@ -45,10 +32,36 @@ seedUsers();
 export function itemsFor(phoneNumber: string): (MockItem & { _id: string })[] {
   let items = itemsByPhone.get(phoneNumber);
   if (!items) {
-    items = phoneNumber === DEMO_PHONE ? buildSeed().map((item) => ({ ...item, _id: newId() })) : [];
+    items = [];
     itemsByPhone.set(phoneNumber, items);
   }
   return items;
+}
+
+export function itemsForDates(phoneNumber: string, dates: string[]): (MockItem & { _id: string })[] {
+  const items = itemsFor(phoneNumber);
+  let generatedDates = generatedDatesByPhone.get(phoneNumber);
+  if (!generatedDates) {
+    generatedDates = new Set();
+    generatedDatesByPhone.set(phoneNumber, generatedDates);
+  }
+  for (const date of dates) {
+    if (generatedDates.has(date)) continue;
+    const category = ITEM_CATEGORIES[Math.floor(Math.random() * ITEM_CATEGORIES.length)];
+    if (category === undefined) throw new Error('Failed to select a mock item category');
+    items.push({
+      _id: newId(),
+      category,
+      amount: Math.floor(Math.random() * 1000) + 1,
+      type: 'expense',
+      date,
+      time: '12:00',
+      weekDay: getWeekDay(date),
+    });
+    generatedDates.add(date);
+  }
+  const requestedDates = new Set(dates);
+  return items.filter((item) => requestedDates.has(item.date));
 }
 
 export function generateId(): string {
@@ -71,6 +84,7 @@ export function removeUser(phoneNumber: string): void {
 
 export function resetMockStore(): void {
   itemsByPhone.clear();
+  generatedDatesByPhone.clear();
   users.clear();
   seedUsers();
 }

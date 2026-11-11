@@ -70,8 +70,8 @@ export function evaluateBudget(s, b) {
   if (cap != null && (s.stageCalls[s.stage] ?? 0) >= cap) raise('ask', `Stage "${s.stage}" used ${s.stageCalls[s.stage]} tool calls (stage budget ${cap}).`);
   if (level === 'allow') return { permission: 'allow' };
   const next = level === 'deny'
-    ? 'Stop, summarise progress and what remains, and hand over to the user.'
-    : 'Stop, summarise progress and what remains, and ask the user whether to approve more budget (they run `npm run ai:budget -- extend`).';
+    ? 'Stop and tell the user the hard ceiling was reached. Do not reset the budget unless the user explicitly chooses that option; the guard will request approval before a reset.'
+    : 'Run `npm run ai:budget -- extend` to request user approval. The guard will ask before granting more budget; continue only if approved, otherwise stop and summarise what remains.';
   return { permission: level, reason: `Work budget reached. ${over.join(' ')} ${next}` };
 }
 

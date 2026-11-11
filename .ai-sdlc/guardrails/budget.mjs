@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Usage: npm run ai:budget -- status            show work budget (tool calls, KB read, stage)
 //        npm run ai:budget -- stage <name>      orchestrator: set the current stage (pm-analyst|developer|reviewer)
-//        npm run ai:budget -- extend            HUMAN approval: grant more budget (agents must never run this)
-//        npm run ai:budget -- reset             clear the budget
+//        npm run ai:budget -- extend            request user approval to grant more budget
+//        npm run ai:budget -- reset             request user approval to clear the budget
 import { loadConfig, repoRoot } from '../hooks/guard.mjs';
 import {
   allowedCalls, allowedKB, budgetOf, extendBudget, readBudget, resetBudget, setStage, stageAllowed, writeBudget,

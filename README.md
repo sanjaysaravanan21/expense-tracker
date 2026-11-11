@@ -198,31 +198,34 @@ npm run test:ai                                               # guardrail and ho
 
 ### Database and mock modes
 
-Mock mode is intended for UI development without MongoDB and as a fallback
-when the database is unavailable. It uses a separate in-memory store: changes
-are **not saved to MongoDB**, are lost when the server restarts, and are not
-synced to MongoDB if it becomes available later.
+Mock mode is intended for development without MongoDB and as a fallback when
+the database is unavailable. All authenticated users see randomly generated
+expenses for requested dates. The generated data is consistent across day,
+week, and month views while the server is running.
+
+Mock data and changes are stored only in memory. They are **not saved to
+MongoDB**, are lost when the server restarts, and are not synced to MongoDB if
+it becomes available later.
 
 | `MOCK_DATA` | Non-production behavior |
 |-------------|-------------------------|
-| `auto` (default) | Connect to MongoDB when available; otherwise warn and use mock data. Check the startup logs so an outage is not mistaken for persistent storage. |
-| `always` | Skip the database connection and use mock data, even if `DB_URL` is set. Useful for database-free UI development. |
-| `never` | Require MongoDB; fail startup instead of falling back. Use this when persistence is required. |
+| `auto` (default) | Connect to MongoDB and return actual data when available. If the database is missing or unreachable at startup, warn and serve random mock data instead. |
+| `always` | Skip the database connection and serve random mock data, even if MongoDB is reachable. |
+| `never` | Require MongoDB and return actual data. Fail startup if the database is missing or unreachable; never fall back to mock data. |
 
 For database-free development, set `MOCK_DATA=always` in your local `.env` and
-remove or comment out `DB_URL` if you don't need it. The example file sets
-`DB_URL` and a placeholder `JWT_SECRET`; if `DB_URL` remains set, validation
-still requires replacing the placeholder with a secret of at least 16
-characters, even in forced mock mode. Never commit real secrets.
+remove or comment out `DB_URL` if you don't need it. If `DB_URL` is set,
+validation requires a `JWT_SECRET` of at least 16 characters, even in forced
+mock mode. Never commit real secrets.
 
 For persistent development data, configure a reachable `DB_URL` and a valid
 `JWT_SECRET`, and set `MOCK_DATA=never`. Production always behaves as `never`,
 regardless of the configured `MOCK_DATA` value.
 
-At startup, look for **“Connected to MongoDB”** or **“Running with mock data”**
-in the server output to confirm which store is active. In mock mode, log in as
-`9999999999` with OTP `123456` to see seeded items; other registered users
-start empty.
+The store is selected at startup. Check the server output for **“Connected to
+MongoDB”** or **“Running with mock data”** to confirm which store is active.
+In mock mode, you can log in as `9999999999` with OTP `123456`; registered
+users also see random mock expenses.
 
 ### End-to-end tests (Playwright)
 
