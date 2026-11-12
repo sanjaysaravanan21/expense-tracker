@@ -74,7 +74,7 @@ const ItemList: React.FC = () => {
 
   return (
     <div
-      className="absolute left-0 rounded-2xl bg-white text-center h-screen w-full"
+      className="absolute left-0 rounded-2xl bg-white text-center h-screen w-full flex flex-col"
       style={{
         top: state.itemsTop,
         height: `calc(100vh - ${state.itemsTop}px)`,
@@ -99,8 +99,7 @@ const ItemList: React.FC = () => {
         ))}
       </div>
       <div
-        className="h-full overflow-y-auto no-scrollbar"
-        style={{ height: "calc(100% - 120px)" }}
+        className="min-h-0 flex-1 mb-[124px] overflow-y-auto no-scrollbar"
       >
         {state.groupDays
           ? state.groupDays.map(({ date }) => {

@@ -1,6 +1,7 @@
 // src/components/FloatingButton.tsx
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useAppContext } from "@/lib/app-context";
 import { addExpense } from "../api";
 import items from "../data/expense-types.json";
@@ -39,6 +40,71 @@ const AddExpense: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string>("");
   const [formData, setFormData] = useState(initialFormState);
+  const [tooltip, setTooltip] = useState<"hidden" | "visible" | "fading">("hidden");
+  const location = useLocation();
+  const buttonContainer = useRef<HTMLDivElement>(null);
+  const showTimer = useRef<ReturnType<typeof setTimeout>>();
+  const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+  const longPress = useRef(false);
+  const suppressClick = useRef(false);
+
+  const clearTooltipTimers = () => {
+    clearTimeout(showTimer.current);
+    clearTimeout(hideTimer.current);
+  };
+
+  const dismissTooltip = () => {
+    clearTooltipTimers();
+    setTooltip("hidden");
+  };
+
+  useEffect(() => {
+    const dismissOutside = (event: Event) => {
+      if (event.target instanceof Node && !buttonContainer.current?.contains(event.target)) {
+        clearTooltipTimers();
+        setTooltip("hidden");
+      }
+    };
+    document.addEventListener("touchstart", dismissOutside);
+    document.addEventListener("mousedown", dismissOutside);
+    return () => {
+      document.removeEventListener("touchstart", dismissOutside);
+      document.removeEventListener("mousedown", dismissOutside);
+      clearTooltipTimers();
+      longPress.current = false;
+      suppressClick.current = false;
+      setTooltip("hidden");
+    };
+  }, [location.key]);
+
+  const handleMouseEnter = () => {
+    clearTooltipTimers();
+    showTimer.current = setTimeout(() => setTooltip("visible"), 300);
+  };
+
+  const handleMouseLeave = () => {
+    clearTooltipTimers();
+    setTooltip((current) => current === "visible" ? "fading" : "hidden");
+    hideTimer.current = setTimeout(() => setTooltip("hidden"), 150);
+  };
+
+  const handleTouchStart = () => {
+    clearTooltipTimers();
+    suppressClick.current = false;
+    longPress.current = false;
+    showTimer.current = setTimeout(() => {
+      longPress.current = true;
+      setTooltip("visible");
+    }, 400);
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    clearTimeout(showTimer.current);
+    if (longPress.current) {
+      event.preventDefault();
+      suppressClick.current = true;
+    }
+  };
 
   const togglePopup = () => {
     setIsOpen(!isOpen);
@@ -79,12 +145,44 @@ const AddExpense: React.FC = () => {
   return (
     <>
       {/* Floating Add Button */}
-      <button
-        onClick={togglePopup}
-        className="absolute bottom-4 text-3xl right-4 bg-primary text-white shadow-xl h-14 w-14 rounded-full"
-      >
-        <i className="fa-solid fa-plus"></i>
-      </button>
+      {!isOpen && <div ref={buttonContainer} className="absolute bottom-4 right-4">
+        {tooltip !== "hidden" && (
+          <div
+            role="tooltip"
+            className="absolute bottom-full right-0 mb-2 max-w-[calc(100vw-2rem)] overflow-hidden text-ellipsis rounded-lg bg-[#1E232A] px-3 py-2 text-sm text-white whitespace-nowrap pointer-events-none"
+            style={{ opacity: tooltip === "visible" ? 1 : 0, transition: "opacity 150ms" }}
+          >
+            Add Expense
+          </div>
+        )}
+        <button
+          type="button"
+          aria-label="Add Expense"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onPointerDown={(event) => {
+            if (event.pointerType === "mouse") suppressClick.current = false;
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" || event.key === " ") suppressClick.current = false;
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchMove={() => { clearTimeout(showTimer.current); }}
+          onTouchCancel={() => { longPress.current = false; dismissTooltip(); }}
+          onClick={() => {
+            if (suppressClick.current) {
+              suppressClick.current = false;
+              return;
+            }
+            dismissTooltip();
+            togglePopup();
+          }}
+          className="text-3xl bg-primary text-white shadow-xl h-14 w-14 rounded-full"
+        >
+          <i className="fa-solid fa-plus"></i>
+        </button>
+      </div>}
 
       {/* Popup/Modal */}
       {isOpen && (
