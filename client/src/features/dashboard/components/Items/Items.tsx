@@ -67,6 +67,14 @@ const ItemList: React.FC = () => {
     setSelection({ view: state.expenseView, type: val });
   };
 
+  const filteredItems = state.items.filter(
+    ({ category }) => type === "all" || category === type
+  );
+  const groups = state.groupDays?.map(({ date }) => ({
+    date,
+    items: filteredItems.filter((item) => item.date === date),
+  })).filter((group) => group.items.length > 0);
+
   useEffect(() => {
     handleOverlayValue();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -102,30 +110,24 @@ const ItemList: React.FC = () => {
         className="h-full overflow-y-auto no-scrollbar"
         style={{ height: "calc(100% - 120px)" }}
       >
-        {state.groupDays
-          ? state.groupDays.map(({ date }) => {
-              const dayItems = (
-                state.items.filter((item) => item.date === date) || []
-              ).filter(({ category }) => type === "all" || category === type);
-              if (dayItems.length === 0) {
-                return <span key={date}>"No Records Found"</span>;
-              }
-              return (
-                <div key={date}>
-                  <h3 className="text-xs font-medium mx-4 text-left text-grey-dark">
-                    {date}
-                  </h3>
-                  {dayItems.map((expense, i) => {
-                    return <ListItem key={i} {...expense} />;
-                  })}
-                </div>
-              );
-            })
-          : (state.items || [])
-              .filter(({ category }) => type === "all" || category === type)
-              .map((expense, i) => {
-                return <ListItem key={i} {...expense} />;
-              })}
+        {(groups ? groups.length === 0 : filteredItems.length === 0) ? (
+          <span>"No Records Found"</span>
+        ) : groups ? (
+          groups.map(({ date, items: dayItems }) => (
+            <div key={date}>
+              <h3 className="text-xs font-medium mx-4 text-left text-grey-dark">
+                {date}
+              </h3>
+              {dayItems.map((expense, i) => (
+                <ListItem key={i} {...expense} />
+              ))}
+            </div>
+          ))
+        ) : (
+          filteredItems.map((expense, i) => (
+            <ListItem key={i} {...expense} />
+          ))
+        )}
       </div>
     </div>
   );
