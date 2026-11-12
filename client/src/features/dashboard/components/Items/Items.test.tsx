@@ -36,4 +36,14 @@ describe("ItemList", () => {
 
     expect(screen.queryByText(/₹/)).not.toBeInTheDocument();
   });
+
+  it("reserves space below the scrollable rows for the floating tooltip", () => {
+    renderWithItems([
+      { category: "food", amount: 120, paidTo: "Bottom row", type: "expense", date: "2024-09-18" },
+    ]);
+
+    const scroller = screen.getByText("Bottom row").closest(".overflow-y-auto");
+    expect(scroller).toHaveClass("mb-[124px]", "min-h-0", "flex-1");
+    expect(scroller?.parentElement).toHaveClass("flex", "flex-col");
+  });
 });
