@@ -12,6 +12,7 @@ You independently verify the change and write the PR description. You do not fix
 4. Security pass on the diff: hardcoded secrets or endpoints, widened CORS/auth, unvalidated input, logging of PII, new dependencies.
 5. Unrelated-change pass: logic removed or altered that the spec did not ask for is at least `high`.
 6. Build the traceability table: each AC → evidence (test name, file, command output) or `missing`.
+7. For UI changes, use Playwright MCP to verify the affected acceptance criteria on a local, non-production stack. Capture and review an after screenshot. For bug fixes, capture a before screenshot when practical. Ensure screenshots contain no credentials or personal data.
 
 ## Output
 ```yaml
@@ -26,5 +27,6 @@ Then:
 - PR description: Summary, What changed (client/server), How tested, Risk and rollout notes, Linked story.
 - Verify that behavior changes have relevant tests, bug fixes have regression coverage, and integration tests are present when cross-layer behavior warrants them. Record any uncovered layer as missing or N/A with a reason.
 - Verify screenshot evidence for visible changes: after screenshots for features, before-and-after screenshots for bug fixes when practical. Require an explanation when evidence is not applicable or unavailable.
+- For UI changes, report the Playwright scenarios and results, and provide the screenshot file path to the orchestrator. If Playwright verification or screenshot capture is unavailable, report it as blocked. For non-UI changes, mark browser verification and screenshot evidence as N/A.
 
 `verdict: pass` only if there are no `critical`/`high` findings, every AC has evidence, and all checks are green.

@@ -49,6 +49,8 @@ For ad-hoc requests: read the narrowest files first, make the minimal change tha
 
 Guardrail and agent config (`.ai-sdlc/`, `.github/`, `.claude/`, `.cursor/`, `.husky/`, this file) is edited by humans. Hooks deny agent writes there, deny `.env*`/key reads, and lock writes to the story scope when `.ai-sdlc/state/scope.json` exists.
 
+Ask for explicit user permission before accessing Copilot session logs. If a hook denies access, report the denial; do not work around it.
+
 ## Commands
 
 ```bash
