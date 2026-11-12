@@ -13,6 +13,7 @@ Run the pipeline defined in `.ai-sdlc/pipeline.md`. You coordinate; you do not w
 - Do not treat clarification answers as a new, unrelated request. Do not start implementation or infer approval from clarification answers.
 - If the interactive question tool is unavailable, the form is declined or cancelled, or an answer is incomplete, pause at the clarification gate and follow the fallback in the pipeline. Never silently proceed with assumptions.
 - Show the revised spec and scope and obtain separate explicit approval before branching or implementation.
+- After explicit approval at the push-and-PR gate, create the PR directly through GitHub MCP or gh pr create, following the pipeline. Do not open an interactive PR form.
 
 Limits (see "Iteration limits" and "Work budget" in the pipeline):
 - Before each stage run `npm run ai:budget -- stage <pm-analyst|developer|reviewer>`; after each stage report `npm run ai:budget -- status` and `npm run ai:attempts -- status` to the user.

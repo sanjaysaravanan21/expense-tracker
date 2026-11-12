@@ -85,8 +85,8 @@ git push                          # later pushes
 
 Before opening: `npm run check-types`, `npm run lint`, and `npm run test -- --run` pass, and the review stage has no `critical`/`high` findings.
 
-- Preferred: use the SCM integration (GitHub MCP or `gh pr create`) when connected.
-- Otherwise, give the user the PR title and body to paste.
+- After the required approval, create the PR directly using GitHub MCP or non-interactive gh pr create; do not open an interactive PR form.
+- Confirm creation before reporting the PR URL. If creation fails or neither method is available, report the problem and provide the title and completed body for manual creation.
 - Base branch: `main` unless told otherwise. Open as draft if checks are incomplete.
 - Title: use the Conventional Commit format, such as `feat(items): add recurring expense support`.
 - Before creating a PR or handing off PR text, read `.github/PULL_REQUEST_TEMPLATE.md` and use it as the single source of truth for the PR body. Do not maintain tool-specific copies.
