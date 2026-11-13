@@ -9,6 +9,7 @@
     "server/",
     "scripts/",
     "server.ts",
+    ".playwright-mcp/",
     "README.md"
   ],
   "protectedPaths": [
@@ -115,6 +116,9 @@
   },
   "pricing": {
     "$comment": "PLACEHOLDER USD per million tokens. Replace with your model's real prices; used only by ai:usage estimates.",
-    "default": { "inputPerMTok": 3, "outputPerMTok": 15 }
+    "default": {
+      "inputPerMTok": 3,
+      "outputPerMTok": 15
+    }
   }
 }

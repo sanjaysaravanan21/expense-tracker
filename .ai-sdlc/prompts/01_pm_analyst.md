@@ -16,7 +16,12 @@ You turn a sanitized user story into a spec the developer can implement without 
    - `architectural`: spans client and server, adds or changes an API contract, touches auth or permissions, shared `lib`, or adds a dependency. When unsure, pick the higher tier.
 5. Write the steps (S1, S2, …) with files, the ACs covered, dependencies, and a verification command each.
 6. List tests to write first (file path, ACs covered) asserting user-visible behavior.
-7. Produce the **scope**: repo-relative files, or directories ending in `/`. Include test files. Nothing under `.ai-sdlc/`, `.github/`, `.claude/`, `.cursor/`, `.husky/`, and never `.env*`.
+7. Produce the **scope**: repo-relative files or directories ending in `/`. Include test files. Never include `.env*`, or files under `.ai-sdlc/`, `.github/`, `.claude/`, `.cursor/`, or `.husky/`.
+   - For every UI-visible change, include an exact `.playwright-mcp/<story-slug>-after.png` path in SCOPE.
+   - For UI bug fixes, also include `.playwright-mcp/<story-slug>-before.png` when a before screenshot is practical; otherwise state why it is N/A.
+   - For non-UI changes, omit screenshot paths and mark browser evidence N/A.
+   - Treat screenshots as review evidence, use synthetic data, and ensure they contain no credentials or personal data.
+   - Screenshot paths count toward the 8-path limit.
 8. Size guard: more than 8 files or 6 steps, or more than one independently shippable outcome → `blocked: needs-split` with a proposed split.
 
 ## Output
