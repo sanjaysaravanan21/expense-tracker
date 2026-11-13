@@ -97,6 +97,8 @@ describe("ItemList", () => {
   it("preserves scroll clearance above the Add Expense button", () => {
     const { container } = renderWithItems([]);
 
-    expect(container.querySelector('[style="height: calc(100% - 120px);"]')).toBeInTheDocument();
+    const scrollableList = container.querySelector('[style="height: calc(100% - 120px);"]');
+    expect(scrollableList).toBeInTheDocument();
+    expect(scrollableList).toHaveClass("pb-16");
   });
 });

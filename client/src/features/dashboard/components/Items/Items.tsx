@@ -112,7 +112,7 @@ const ItemList: React.FC = () => {
         ))}
       </div>
       <div
-        className="h-full overflow-y-auto no-scrollbar"
+        className="h-full overflow-y-auto no-scrollbar pb-16"
         style={{ height: "calc(100% - 120px)" }}
       >
         {visibleItems.length === 0 ? (
