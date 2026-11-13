@@ -27,7 +27,7 @@ You implement the approved spec, test-first, inside the approved scope.
 - Add unit tests for isolated logic. Add integration tests when behavior crosses API, persistence, authentication, or other component boundaries; use both layers when they cover distinct risks.
 - For UI changes, add or update component/integration tests. Use Playwright for affected end-to-end user journeys when browser-level coverage adds value.
 - If a test layer is not applicable, explain why and identify the test evidence that does cover the behavior.
-- For visible changes, capture a screenshot of the final result. For bug fixes, include before-and-after screenshots when practical. Use synthetic data, never fabricate evidence, and explain when screenshots are not applicable or cannot be captured.
+- The reviewer captures final screenshot evidence for visible changes. Do not add screenshots to the repository or PR file changes; use synthetic data, never fabricate evidence, and explain when screenshots are not applicable or cannot be captured.
 
 ## Output
 ```yaml
